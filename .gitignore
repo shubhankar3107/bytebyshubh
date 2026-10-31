@@ -1,10 +1,15 @@
 # Dependencies
 node_modules/
+**/node_modules/
 
 # Next.js
 .next/
+**/.next/
 out/
+
+# Production builds
 build/
+dist/
 
 # Environment variables
 .env
@@ -16,6 +21,15 @@ build/
 
 # Deployment
 .vercel/
+
+# System files
+.DS_Store
+
+# Logs
+*.log
+
+# Editor
+.vscode/
 
 # Local reports
 *.report.html
