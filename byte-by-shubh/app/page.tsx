@@ -119,8 +119,8 @@ function JarvisVisual() {
     let observer: ResizeObserver | undefined;
     let disposed = false;
 
-    let geometries: THREE.BufferGeometry[] = [];
-    let materials: THREE.Material[] = [];
+    const geometries: THREE.BufferGeometry[] = [];
+    const materials: THREE.Material[] = [];
 
     async function initialise() {
       try {
