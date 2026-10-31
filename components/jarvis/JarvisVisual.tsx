@@ -12,21 +12,30 @@ interface JarvisVisualProps {
 export default function JarvisVisual({
   particleCount = 6500,
   ambientCount = 1200,
-  className = ""
+  className = "",
 }: JarvisVisualProps) {
   const mountRef = useRef<HTMLDivElement>(null);
-
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const container = mountRef.current;
+    const containerElement = mountRef.current;
 
-    if (!container) return;
+    if (!containerElement) return;
+
+    const container: HTMLDivElement = containerElement;
 
     let renderer: THREE.WebGLRenderer | undefined;
     let animationId = 0;
-    let observer: ResizeObserver | undefined;
+    let resizeObserver: ResizeObserver | undefined;
+    let intersectionObserver: IntersectionObserver | undefined;
     let disposed = false;
+
+    let isIntersecting = false;
+    let isPageVisible = !document.hidden;
+
+    let elapsedBeforePause = 0;
+    let animationStart = 0;
+    let lastFrameTime = 0;
 
     const geometries: THREE.BufferGeometry[] = [];
     const materials: THREE.Material[] = [];
@@ -35,12 +44,116 @@ export default function JarvisVisual({
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
+    const isMobile = window.matchMedia(
+      "(max-width: 768px)"
+    ).matches;
+
+    const hardwareConcurrency = navigator.hardwareConcurrency || 4;
+
+    const deviceMemory =
+      "deviceMemory" in navigator
+        ? (navigator as Navigator & { deviceMemory?: number })
+            .deviceMemory || 4
+        : 4;
+
+    const isLowPowerDevice =
+      hardwareConcurrency <= 4 || deviceMemory <= 4;
+
+    // Adaptive rendering quality.
+    const effectiveParticleCount = Math.min(
+      particleCount,
+      isMobile ? 3500 : isLowPowerDevice ? 4500 : particleCount
+    );
+
+    const effectiveAmbientCount = Math.min(
+      ambientCount,
+      isMobile ? 600 : isLowPowerDevice ? 800 : ambientCount
+    );
+
+    // Limit rendering frequency to reduce GPU workload.
+    const targetFrameInterval =
+      isMobile || isLowPowerDevice
+        ? 1000 / 30
+        : 1000 / 45;
+
+    let renderScene: ((time: number) => void) | undefined;
+
+    function stopAnimation() {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = 0;
+      }
+
+      if (animationStart > 0) {
+        elapsedBeforePause +=
+          (performance.now() - animationStart) / 1000;
+
+        animationStart = 0;
+      }
+    }
+
+    function startAnimation() {
+      if (
+        disposed ||
+        prefersReducedMotion ||
+        !isIntersecting ||
+        !isPageVisible ||
+        animationId ||
+        !renderScene
+      ) {
+        return;
+      }
+
+      animationStart = performance.now();
+      lastFrameTime = 0;
+
+      animationId = requestAnimationFrame(animate);
+    }
+
+    function animate(timestamp: number) {
+      if (
+        disposed ||
+        !isIntersecting ||
+        !isPageVisible ||
+        !renderScene
+      ) {
+        animationId = 0;
+        return;
+      }
+
+      animationId = requestAnimationFrame(animate);
+
+      if (
+        timestamp - lastFrameTime < targetFrameInterval
+      ) {
+        return;
+      }
+
+      const elapsed =
+        elapsedBeforePause +
+        (timestamp - animationStart) / 1000;
+
+      renderScene(elapsed);
+
+      lastFrameTime = timestamp;
+    }
+
+    function handleVisibilityChange() {
+      isPageVisible = !document.hidden;
+
+      if (isPageVisible) {
+        startAnimation();
+      } else {
+        stopAnimation();
+      }
+    }
+
     async function initialise() {
       try {
-        const width = container!.clientWidth;
-        const height = container!.clientHeight;
+        const width = container.clientWidth;
+        const height = container.clientHeight;
 
-        if (!width || !height) return;
+        if (!width || !height || disposed) return;
 
         /* =====================================
            SCENE
@@ -63,21 +176,22 @@ export default function JarvisVisual({
 
         renderer = new THREE.WebGLRenderer({
           alpha: true,
-          antialias: true,
-          powerPreference: "high-performance"
+          antialias: !isMobile && !isLowPowerDevice,
+          powerPreference: "high-performance",
         });
 
         renderer.setPixelRatio(
-          Math.min(window.devicePixelRatio, 1.5)
+          Math.min(
+            window.devicePixelRatio || 1,
+            isMobile ? 1.25 : 1.5
+          )
         );
 
         renderer.setSize(width, height);
-
         renderer.setClearColor(0x000000, 0);
-
         renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-        container!.appendChild(renderer.domElement);
+        container.appendChild(renderer.domElement);
 
         /* =====================================
            MAIN HOLOGRAM
@@ -92,20 +206,13 @@ export default function JarvisVisual({
         ===================================== */
 
         const RADIUS = 2.05;
+        const count = effectiveParticleCount;
 
-        const positions = new Float32Array(
-          particleCount * 3
-        );
+        const positions = new Float32Array(count * 3);
+        const originalPositions = new Float32Array(count * 3);
+        const colours = new Float32Array(count * 3);
 
-        const originalPositions = new Float32Array(
-          particleCount * 3
-        );
-
-        const colours = new Float32Array(
-          particleCount * 3
-        );
-
-        for (let i = 0; i < particleCount; i++) {
+        for (let i = 0; i < count; i++) {
           const theta = Math.random() * Math.PI * 2;
 
           const phi = Math.acos(
@@ -158,9 +265,16 @@ export default function JarvisVisual({
 
         const particleGeometry = new THREE.BufferGeometry();
 
+        const particlePositionAttribute =
+          new THREE.BufferAttribute(positions, 3);
+
+        particlePositionAttribute.setUsage(
+          THREE.DynamicDrawUsage
+        );
+
         particleGeometry.setAttribute(
           "position",
-          new THREE.BufferAttribute(positions, 3)
+          particlePositionAttribute
         );
 
         particleGeometry.setAttribute(
@@ -177,7 +291,7 @@ export default function JarvisVisual({
           opacity: 0.9,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
-          sizeAttenuation: true
+          sizeAttenuation: true,
         });
 
         materials.push(particleMaterial);
@@ -202,27 +316,28 @@ export default function JarvisVisual({
           y: number,
           z: number
         ) {
-          return [
-            Math.floor(x / cellSize),
-            Math.floor(y / cellSize),
-            Math.floor(z / cellSize)
-          ].join(",");
+          return `${Math.floor(x / cellSize)},${Math.floor(
+            y / cellSize
+          )},${Math.floor(z / cellSize)}`;
         }
 
-        for (let i = 0; i < particleCount; i++) {
+        for (let i = 0; i < count; i++) {
           const index = i * 3;
 
-          const x = originalPositions[index];
-          const y = originalPositions[index + 1];
-          const z = originalPositions[index + 2];
+          const key = getCellKey(
+            originalPositions[index],
+            originalPositions[index + 1],
+            originalPositions[index + 2]
+          );
 
-          const key = getCellKey(x, y, z);
+          let existing = spatialHash.get(key);
 
-          const existing = spatialHash.get(key) || [];
+          if (!existing) {
+            existing = [];
+            spatialHash.set(key, existing);
+          }
 
           existing.push(i);
-
-          spatialHash.set(key, existing);
         }
 
         /* =====================================
@@ -231,7 +346,7 @@ export default function JarvisVisual({
 
         const connections: number[] = [];
 
-        for (let i = 0; i < particleCount; i++) {
+        for (let i = 0; i < count; i++) {
           const index = i * 3;
 
           const x = originalPositions[index];
@@ -247,11 +362,7 @@ export default function JarvisVisual({
           for (let ox = -1; ox <= 1; ox++) {
             for (let oy = -1; oy <= 1; oy++) {
               for (let oz = -1; oz <= 1; oz++) {
-                const key = [
-                  cx + ox,
-                  cy + oy,
-                  cz + oz
-                ].join(",");
+                const key = `${cx + ox},${cy + oy},${cz + oz}`;
 
                 const neighbours = spatialHash.get(key);
 
@@ -262,7 +373,8 @@ export default function JarvisVisual({
 
                   const jIndex = j * 3;
 
-                  const dx = x - originalPositions[jIndex];
+                  const dx =
+                    x - originalPositions[jIndex];
 
                   const dy =
                     y - originalPositions[jIndex + 1];
@@ -316,7 +428,7 @@ export default function JarvisVisual({
           transparent: true,
           opacity: 0.17,
           blending: THREE.AdditiveBlending,
-          depthWrite: false
+          depthWrite: false,
         });
 
         materials.push(filamentMaterial);
@@ -363,9 +475,10 @@ export default function JarvisVisual({
 
           const curve = new THREE.CatmullRomCurve3(points);
 
-          const curveGeometry = new THREE.BufferGeometry().setFromPoints(
-            curve.getPoints(80)
-          );
+          const curveGeometry =
+            new THREE.BufferGeometry().setFromPoints(
+              curve.getPoints(80)
+            );
 
           geometries.push(curveGeometry);
 
@@ -374,7 +487,7 @@ export default function JarvisVisual({
             transparent: true,
             opacity: 0.2,
             blending: THREE.AdditiveBlending,
-            depthWrite: false
+            depthWrite: false,
           });
 
           materials.push(curveMaterial);
@@ -385,7 +498,6 @@ export default function JarvisVisual({
           );
 
           hologram.add(line);
-
           energyCurves.push(line);
         }
 
@@ -404,7 +516,7 @@ export default function JarvisVisual({
         const coreMaterial = new THREE.MeshBasicMaterial({
           color: 0xb4faff,
           transparent: true,
-          opacity: 0.95
+          opacity: 0.95,
         });
 
         materials.push(coreMaterial);
@@ -429,10 +541,10 @@ export default function JarvisVisual({
         ===================================== */
 
         const ambientPositions = new Float32Array(
-          ambientCount * 3
+          effectiveAmbientCount * 3
         );
 
-        for (let i = 0; i < ambientCount; i++) {
+        for (let i = 0; i < effectiveAmbientCount; i++) {
           const index = i * 3;
 
           ambientPositions[index] =
@@ -460,7 +572,7 @@ export default function JarvisVisual({
           transparent: true,
           opacity: 0.42,
           blending: THREE.AdditiveBlending,
-          depthWrite: false
+          depthWrite: false,
         });
 
         materials.push(ambientMaterial);
@@ -473,26 +585,15 @@ export default function JarvisVisual({
         scene.add(ambientParticles);
 
         /* =====================================
-           ANIMATION LOOP
+           RENDERING
         ===================================== */
 
-        const clock = new THREE.Clock();
-
-        function animate() {
+        renderScene = (time: number) => {
           if (disposed || !renderer) return;
 
-          animationId = requestAnimationFrame(animate);
+          const array = particlePositionAttribute.array as Float32Array;
 
-          const time = prefersReducedMotion
-            ? 0
-            : clock.getElapsedTime();
-
-          const attribute =
-            particleGeometry.attributes.position;
-
-          const array = attribute.array as Float32Array;
-
-          for (let i = 0; i < particleCount; i++) {
+          for (let i = 0; i < count; i++) {
             const index = i * 3;
 
             const x = originalPositions[index];
@@ -510,7 +611,7 @@ export default function JarvisVisual({
             array[index + 2] = z + wave * 0.6;
           }
 
-          attribute.needsUpdate = true;
+          particlePositionAttribute.needsUpdate = true;
 
           hologram.rotation.y =
             Math.sin(time * 0.16) * 0.3;
@@ -542,44 +643,76 @@ export default function JarvisVisual({
           filamentMaterial.opacity =
             0.12 + Math.sin(time * 1.8) * 0.045;
 
-          energyCurves.forEach((line, index) => {
-            line.rotation.z =
-              Math.sin(time * 0.3 + index) * 0.08;
-          });
+          for (let i = 0; i < energyCurves.length; i++) {
+            energyCurves[i].rotation.z =
+              Math.sin(time * 0.3 + i) * 0.08;
+          }
 
           ambientParticles.rotation.y = time * 0.025;
 
           renderer.render(scene, camera);
-        }
+        };
 
-        animate();
+        // Draw one frame immediately.
+        renderScene(0);
+
+        /* =====================================
+           VISIBILITY-BASED ANIMATION
+        ===================================== */
+
+        document.addEventListener(
+          "visibilitychange",
+          handleVisibilityChange
+        );
+
+        if ("IntersectionObserver" in window) {
+          intersectionObserver = new IntersectionObserver(
+            (entries) => {
+              const entry = entries[0];
+
+              isIntersecting = entry.isIntersecting;
+
+              if (isIntersecting) {
+                startAnimation();
+              } else {
+                stopAnimation();
+              }
+            },
+            {
+              threshold: 0.05,
+            }
+          );
+
+          intersectionObserver.observe(container);
+        } else {
+          isIntersecting = true;
+          startAnimation();
+        }
 
         /* =====================================
            RESPONSIVE RESIZING
         ===================================== */
 
-        observer = new ResizeObserver(() => {
-          if (
-            !container!.clientWidth ||
-            !container!.clientHeight ||
-            !renderer
-          ) {
-            return;
-          }
+        resizeObserver = new ResizeObserver(() => {
+          if (disposed || !renderer) return;
 
-          camera.aspect =
-            container!.clientWidth /
-            container!.clientHeight;
+          const newWidth = container.clientWidth;
+          const newHeight = container.clientHeight;
 
+          if (!newWidth || !newHeight) return;
+
+          camera.aspect = newWidth / newHeight;
           camera.updateProjectionMatrix();
 
-          renderer.setSize(
-            container!.clientWidth,
-            container!.clientHeight
-          );
+          renderer.setSize(newWidth, newHeight);
+
+          // Re-render immediately after resizing.
+          if (prefersReducedMotion) {
+            renderScene?.(0);
+          }
         });
 
-        observer.observe(container!);
+        resizeObserver.observe(container);
 
       } catch (error) {
         console.error(
@@ -602,9 +735,15 @@ export default function JarvisVisual({
     return () => {
       disposed = true;
 
-      cancelAnimationFrame(animationId);
+      stopAnimation();
 
-      observer?.disconnect();
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+
+      intersectionObserver?.disconnect();
+      resizeObserver?.disconnect();
 
       geometries.forEach((geometry) => {
         geometry.dispose();
@@ -616,6 +755,7 @@ export default function JarvisVisual({
 
       if (renderer) {
         renderer.dispose();
+        renderer.forceContextLoss();
         renderer.domElement.remove();
       }
     };

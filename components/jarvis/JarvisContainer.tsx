@@ -1,14 +1,29 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import { ArrowUpRight } from "lucide-react";
 
-import JarvisVisual from "./JarvisVisual";
 import JarvisHUD from "./JarvisHUD";
 import JarvisStatus from "./JarvisStatus";
+
+const JarvisVisual = dynamic(
+  () => import("./JarvisVisual"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="jarvis-loading" aria-label="Loading JARVIS visualisation">
+        <span className="pulse-dot" />
+        <span>INITIALISING VISUAL ENGINE...</span>
+      </div>
+    ),
+  }
+);
 
 export default function JarvisContainer() {
   return (
     <section
       className="mission section-wrap"
-      id="jarvis"
+      id="projects"
     >
       <div className="section-label">
         <span>02 / THE BIG EXPERIMENT</span>
@@ -29,8 +44,6 @@ export default function JarvisContainer() {
       </div>
 
       <div className="jarvis-card">
-        {/* HOLOGRAPHIC VISUAL */}
-
         <div className="jarvis-art jarvis-art-advanced">
           <JarvisVisual />
 
@@ -42,8 +55,6 @@ export default function JarvisContainer() {
             ENERGY FIELD / 001
           </div>
         </div>
-
-        {/* PROJECT INFORMATION */}
 
         <div className="jarvis-content">
           <p className="micro-label">
@@ -86,10 +97,7 @@ export default function JarvisContainer() {
 
           <JarvisStatus />
 
-          <a
-            href="#connect"
-            className="text-link"
-          >
+          <a href="#connect" className="text-link">
             FOLLOW THE EXPERIMENT
             <ArrowUpRight size={14} />
           </a>

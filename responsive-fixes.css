@@ -1,0 +1,435 @@
+/* =========================================================
+   BYTE BY SHUBH — RESPONSIVE / OVERFLOW FIXES
+   Append this block at the VERY END of app/globals.css.
+   It intentionally overrides earlier responsive declarations.
+========================================================= */
+
+/* Root-level overflow containment.
+   `clip` prevents decorative/animated children from widening
+   the document without creating a new scroll container. */
+html {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  background: var(--bg);
+}
+
+body {
+  width: 100%;
+  max-width: 100%;
+  min-width: 320px;
+  margin: 0;
+  overflow-x: clip;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Fixed noise overlay must never participate in page sizing. */
+.noise {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+/* Shared layout containers must be shrinkable inside grid/flex layouts. */
+main,
+section,
+.section-wrap,
+.container,
+.hero,
+.hero-copy,
+.hero-visual,
+.jarvis-card,
+.jarvis-art,
+.jarvis-content,
+.terminal-section,
+.terminal-wrap,
+.terminal,
+.connect-inner,
+.site-footer {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Ticker track is deliberately wider than the viewport.
+   The parent is the clipping boundary; do not constrain the track. */
+.ticker {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  contain: paint;
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  max-width: none;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+/* Prevent long labels and terminal text from forcing layout wider. */
+.terminal,
+.terminal-body,
+.terminal-top,
+.terminal-bottom,
+.terminal-line,
+.social-links,
+.social-links a {
+  min-width: 0;
+}
+
+.terminal-line {
+  overflow-wrap: anywhere;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .section-wrap,
+  .container {
+    width: min(700px, calc(100% - 48px));
+  }
+
+  .site-header {
+    width: calc(100% - 48px);
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  }
+
+  .hero-copy,
+  .hero-visual,
+  .about-layout > *,
+  .terminal-section > * {
+    min-width: 0;
+  }
+
+  .about-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(28px, 5vw, 45px);
+  }
+
+  .jarvis-card {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+  }
+
+  .experiment-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .terminal-section {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 35px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 650px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .section-wrap,
+  .container {
+    width: calc(100% - 40px);
+    max-width: 100%;
+  }
+
+  .site-header {
+    width: calc(100% - 40px);
+    max-width: 100%;
+  }
+
+  .hero {
+    display: block;
+    width: calc(100% - 40px);
+    min-height: auto;
+    padding-top: 64px;
+    padding-bottom: 76px;
+    overflow: clip;
+  }
+
+  .hero h1 {
+    font-size: clamp(48px, 12.8vw, 68px);
+    line-height: 1;
+    overflow-wrap: normal;
+  }
+
+  .hero-intro {
+    max-width: 100%;
+  }
+
+  .hero-actions {
+    width: min(100%, 260px);
+  }
+
+  .hero-actions .button {
+    max-width: 100%;
+  }
+
+  /* Keep the orbital illustration centred and inside the hero.
+     Avoid scaling the entire layout box beyond the viewport. */
+  .hero-visual {
+    width: 100%;
+    height: 340px;
+    margin: 18px auto 0;
+    transform: none;
+    overflow: clip;
+  }
+
+  .orbit-one {
+    width: min(330px, 88vw);
+    height: 230px;
+  }
+
+  .orbit-two {
+    width: min(270px, 74vw);
+    height: 350px;
+  }
+
+  .visual-core {
+    width: 190px;
+    height: 190px;
+  }
+
+  .core-symbol {
+    width: 84px;
+    height: 84px;
+  }
+
+  .core-symbol span {
+    font-size: 54px;
+  }
+
+  .float-chip {
+    max-width: 125px;
+    padding: 8px 9px;
+    font-size: 8px;
+  }
+
+  .chip-ai {
+    top: 20px;
+    right: 4px;
+  }
+
+  .chip-code {
+    left: 4px;
+    bottom: 70px;
+  }
+
+  .chip-signal {
+    right: 4px;
+    bottom: 35px;
+  }
+
+  .hero-side-note {
+    display: none;
+  }
+
+  .hero-meta {
+    max-width: 100%;
+    flex-wrap: wrap;
+    line-height: 1.8;
+  }
+
+  .scroll-cue {
+    bottom: 15px;
+  }
+
+  .about-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 30px;
+    margin-top: 45px;
+  }
+
+  .about-text {
+    max-width: 100%;
+  }
+
+  .mission-heading {
+    display: block;
+  }
+
+  .jarvis-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .jarvis-art {
+    width: 100%;
+    min-height: 310px;
+  }
+
+  .jarvis-content {
+    padding: 32px 24px;
+  }
+
+  .jarvis-hud-left {
+    left: 12px;
+  }
+
+  .jarvis-hud-right {
+    right: 12px;
+  }
+
+  .jarvis-hud-top,
+  .jarvis-hud-bottom {
+    left: 12px;
+    right: 12px;
+  }
+
+  .experiment-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .experiment-card {
+    min-width: 0;
+  }
+
+  .terminal-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 30px;
+  }
+
+  .terminal-wrap {
+    width: 100%;
+  }
+
+  .terminal-top {
+    gap: 8px;
+    font-size: 8px;
+  }
+
+  .terminal-top > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .terminal-body {
+    padding: 20px 14px;
+  }
+
+  .terminal-line {
+    font-size: clamp(8px, 2.4vw, 10px);
+    line-height: 2.2;
+  }
+
+  .philosophy h2 {
+    font-size: clamp(43px, 11.5vw, 57px);
+  }
+
+  .connect-inner {
+    padding: 54px 16px;
+  }
+
+  .connect h2 {
+    font-size: clamp(46px, 12vw, 58px);
+  }
+
+  .social-links {
+    gap: 8px;
+  }
+
+  .social-links a {
+    padding: 11px 10px;
+    gap: 7px;
+    font-size: 7px;
+  }
+
+  .site-footer {
+    min-height: 100px;
+    height: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 22px 0;
+  }
+
+  .footer-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .footer-tagline {
+    display: none;
+  }
+
+  .footer-copy {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 7px;
+  }
+
+  .back-top {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-self: end;
+  }
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  .section-wrap,
+  .container,
+  .site-header,
+  .hero {
+    width: calc(100% - 32px);
+  }
+
+  .hero h1 {
+    font-size: clamp(44px, 12.5vw, 52px);
+  }
+
+  .hero-visual {
+    height: 300px;
+  }
+
+  .visual-core {
+    width: 165px;
+    height: 165px;
+  }
+
+  .float-chip {
+    font-size: 7px;
+    padding: 7px;
+  }
+
+  .chip-code {
+    bottom: 55px;
+  }
+
+  .terminal-bottom {
+    padding-inline: 9px;
+    font-size: 7px;
+  }
+}
+
+/* Respect reduced-motion preferences for marquee and decorative motion. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track,
+  .hero-grid,
+  .hero::before,
+  .visual-core,
+  .core-symbol,
+  .orbit-one,
+  .orbit-two,
+  .float-chip,
+  .jarvis-scanline,
+  .cursor {
+    animation: none !important;
+  }
+}

@@ -1,8 +1,13 @@
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
 import JarvisContainer from "@/components/jarvis/JarvisContainer";
 import Experiments from "@/components/sections/Experiments";
+import TerminalSection from "@/components/sections/TerminalSection";
+import Philosophy from "@/components/sections/Philosophy";
+import Connect from "@/components/sections/Connect";
 
 export default function HomePage() {
   return (
@@ -11,72 +16,29 @@ export default function HomePage() {
 
       <Header />
 
+      {/* 01 — HERO */}
       <Hero />
 
-      {/* ABOUT */}
+      {/* 02 — ABOUT */}
       <About />
 
-      {/* JARVIS */}
+      {/* FLAGSHIP PROJECT — JARVIS */}
       <JarvisContainer />
 
-      {/* EXPERIMENTS */}
+      {/* 03 — EXPERIMENTS */}
       <Experiments />
 
-      {/* PROJECTS */}
-      <section
-        id="projects"
-        className="section section-wrap"
-      >
-        <p className="micro-label">04 / PROJECTS</p>
+      {/* 04 — TERMINAL */}
+      <TerminalSection />
 
-        <h2>
-          Ideas turned into working systems.
-        </h2>
-      </section>
+      {/* 05 — PHILOSOPHY */}
+      <Philosophy />
 
-      {/* CONNECT */}
-      <section
-        id="connect"
-        className="section section-wrap"
-      >
-        <p className="micro-label">05 / TRANSMISSION OPEN</p>
-
-        <h2>
-          Curious where this goes?
-        </h2>
-      </section>
+      {/* 06 — CONNECT */}
+      <Connect />
 
       {/* FOOTER */}
-      <footer className="site-footer section-wrap">
-        <a
-          href="#home"
-          className="brand footer-brand"
-        >
-          <span className="brand-mark">
-            b<span>.</span>
-          </span>
-
-          <span>
-            BYTE <em>BY SHUBH</em>
-          </span>
-        </a>
-
-        <span className="footer-tagline">
-          BUILDING THE FUTURE, ONE BYTE AT A TIME.
-        </span>
-
-        <span className="footer-copy">
-          © 2026 BYTE BY SHUBH
-        </span>
-
-        <a
-          className="back-top"
-          href="#home"
-          aria-label="Back to top"
-        >
-          ↑
-        </a>
-      </footer>
+      <Footer />
     </main>
   );
 }
