@@ -598,13 +598,13 @@ function JarvisVisual() {
 
             const wave =
               Math.sin(
-                time * 1.4 + x * 3 + y * 2
-              ) * 0.045;
+                time * 1.5 + x * 3 + y * 2
+              ) * 0.065;
 
             const turbulence =
               Math.sin(
-                time * 0.8 + z * 4
-              ) * 0.035;
+                time * 1.1 + z * 4
+              ) * 0.05;
 
             array[index] = x + wave;
 
@@ -623,10 +623,21 @@ function JarvisVisual() {
           hologram.rotation.x =
             Math.sin(time * 0.22) * 0.12;
 
-          const pulse =
-            1 + Math.sin(time * 2.1) * 0.035;
+          // ORGANIC EXPANSION AND CONTRACTION
 
-          hologram.scale.setScalar(pulse);
+          const breathing =
+            Math.sin(time * 1.5) * 0.075;
+
+          const secondaryPulse =
+            Math.sin(time * 3.2) * 0.018;
+
+          const pulse = 1 + breathing + secondaryPulse;
+
+          hologram.scale.set(
+            pulse,
+            pulse * (1 + Math.sin(time * 1.2) * 0.025),
+            pulse * (1 + Math.cos(time * 1.4) * 0.02)
+          );
 
           core.scale.setScalar(
             1 + Math.sin(time * 3.5) * 0.35
