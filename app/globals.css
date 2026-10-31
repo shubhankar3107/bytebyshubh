@@ -1997,3 +1997,207 @@ body {
     font-size: 16px;
   }
 }
+
+
+/* =========================================
+   EXPERIMENTS SECTION
+========================================= */
+
+.experiments {
+  padding-top: 100px;
+}
+
+.experiments-intro {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  margin: 65px 0 42px;
+}
+
+.experiments-intro .micro-label {
+  grid-column: 1 / -1;
+}
+
+.experiments h2 {
+  font-size: clamp(40px, 5vw, 62px);
+  line-height: 1.12;
+  letter-spacing: -0.065em;
+  margin: 0;
+  font-weight: 600;
+}
+
+.intro-aside {
+  max-width: 240px;
+  color: #82909f;
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 0 0 4px;
+}
+
+/* GRID */
+
+.experiment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+/* CARDS */
+
+.experiment-card {
+  position: relative;
+  min-height: 255px;
+  padding: 25px;
+  background: linear-gradient(
+    145deg,
+    #101720,
+    #0b1017
+  );
+  border: 1px solid var(--line);
+  transition:
+    border-color 0.25s,
+    transform 0.25s;
+}
+
+.experiment-card:hover {
+  border-color: #69e4f455;
+  transform: translateY(-5px);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  color: #667687;
+  font-size: 8px;
+}
+
+.card-top svg {
+  color: var(--cyan);
+}
+
+.experiment-card h3 {
+  font-size: 19px;
+  letter-spacing: -0.04em;
+  margin: 48px 0 12px;
+}
+
+.experiment-card p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #8794a3;
+  max-width: 270px;
+  margin: 0;
+}
+
+/* CARD ARROW */
+
+.card-arrow {
+  position: absolute;
+  right: 23px;
+  bottom: 22px;
+  color: #5b7181;
+  transition:
+    color 0.2s,
+    transform 0.2s;
+}
+
+.experiment-card:hover .card-arrow {
+  color: var(--cyan);
+  transform: translate(3px, -3px);
+}
+
+/* PREMIUM HOVER EFFECT */
+
+.experiment-card {
+  transform-style: preserve-3d;
+  transition:
+    transform 450ms var(--motion-ease),
+    border-color 350ms ease,
+    box-shadow 350ms ease;
+  overflow: hidden;
+}
+
+.experiment-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(105, 228, 244, 0.13),
+    transparent 65%
+  );
+  transition: opacity 400ms ease;
+}
+
+.experiment-card:hover {
+  transform:
+    perspective(900px)
+    rotateX(2deg)
+    rotateY(-2deg)
+    translateY(-8px);
+
+  border-color: #69e4f46b;
+
+  box-shadow:
+    0 20px 50px #0006,
+    0 0 30px #69e4f40b;
+}
+
+.experiment-card:hover::before {
+  opacity: 1;
+}
+
+.experiment-card h3,
+.experiment-card p,
+.card-top,
+.card-arrow {
+  position: relative;
+  z-index: 1;
+}
+
+.experiment-card h3 {
+  transition: color 300ms ease;
+}
+
+.experiment-card:hover h3 {
+  color: #c6f7ff;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+  .experiment-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .experiments-intro {
+    display: block;
+    margin: 45px 0 30px;
+  }
+
+  .intro-aside {
+    margin-top: 20px;
+  }
+
+  .experiment-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .experiment-card {
+    min-height: 210px;
+    padding: 22px;
+  }
+
+  .experiment-card h3 {
+    margin-top: 35px;
+  }
+
+  .experiment-card:hover {
+    transform: translateY(-4px);
+  }
+}

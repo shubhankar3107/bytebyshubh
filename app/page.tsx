@@ -2,6 +2,7 @@ import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
 import JarvisContainer from "@/components/jarvis/JarvisContainer";
+import Experiments from "@/components/sections/Experiments";
 
 export default function HomePage() {
   return (
@@ -19,16 +20,7 @@ export default function HomePage() {
       <JarvisContainer />
 
       {/* EXPERIMENTS */}
-      <section
-        id="experiments"
-        className="section section-wrap"
-      >
-        <p className="micro-label">03 / EXPERIMENTS</p>
-
-        <h2>
-          Exploring what&apos;s possible.
-        </h2>
-      </section>
+      <Experiments />
 
       {/* PROJECTS */}
       <section
